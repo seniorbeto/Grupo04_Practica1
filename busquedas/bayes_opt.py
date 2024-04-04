@@ -22,17 +22,17 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_
 
 def objective(trial):
     params = {
-        'n_estimators': trial.suggest_int('n_estimators', 50, 250),
-        'max_depth': trial.suggest_int('max_depth', 10, 50),
-        'min_samples_split': trial.suggest_int('min_samples_split', 2, 10),
+        'n_estimators': trial.suggest_int('n_estimators', 200, 350),
+        'max_depth': trial.suggest_int('max_depth', 20, 30),
+        'min_samples_split': trial.suggest_int('min_samples_split', 2, 5),
         'min_samples_leaf': trial.suggest_int('min_samples_leaf', 1, 4),
-        'bootstrap': trial.suggest_categorical('bootstrap', [True, False])
+        'bootstrap':  trial.suggest_categorical('bootstrap', [True])
     }
     # print(f"Trial {trial.number} - Iniciando entrenamiento con hiperparámetros: {params}")
     
     model = RandomForestRegressor(**params)
     rmse_scores = []
-    for _ in range(5):  # 5-fold cross-validation
+    for _ in range(10):  # 5-fold cross-validation
         X_fold_train, X_fold_val, y_fold_train, y_fold_val = train_test_split(X_train, y_train, test_size=0.2, random_state=SEED)
         model.fit(X_fold_train, y_fold_train)
         y_pred = model.predict(X_fold_val)
@@ -69,7 +69,7 @@ best_model.fit(X_train, y_train)
 y_test_pred = best_model.predict(X_test)
 
 # Calcular métricas
-rmse_rf_cv = metrics.mean_squared_error(y_test, y_test_pred, squared=False)
+rmse_rf_cv = metrics.root_mean_squared_error(y_test, y_test_pred, squared=False)
 r2_rf_cv = best_model.score(X_test, y_test)
 
 print(f"RMSE: {rmse_rf_cv}")
@@ -80,3 +80,5 @@ import pickle
 with open('bayes_rf.pkl', 'wb') as f:
     pickle.dump(best_model, f)
 
+# parametros obtenidos por la busqueda
+# {'n_estimators': 239, 'max_depth': 25, 'min_samples_split': 2, 'min_samples_leaf': 1, 'bootstrap': True}
