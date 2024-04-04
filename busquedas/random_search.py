@@ -9,8 +9,7 @@ import time
 # definicion de constantes usadas a lo largo del proyecto
 SEED = 100472050 # la semilla debe ser el NIA de uno de los integrantes
 wind_ava = pd.read_csv("data/wind_ava.csv", index_col=0)
-wind_comp = pd.read_csv("data/wind_comp.csv", index_col=0)
-
+print(wind_ava.head())
 
 # Primero, dividiremos los datos en entrenamiento y test
 X = wind_ava.drop(columns='energy')

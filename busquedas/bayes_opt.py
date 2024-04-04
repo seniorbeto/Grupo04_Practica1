@@ -8,7 +8,7 @@ import numpy as np
 # definicion de constantes usadas a lo largo del proyecto
 SEED = 100472050  # la semilla debe ser el NIA de uno de los integrantes
 wind_ava = pd.read_csv("data/wind_ava.csv", index_col=0)
-
+print(wind_ava.head())
 # Dividimos los datos en entrenamiento y test
 X = wind_ava.drop(columns='energy')
 y = wind_ava['energy']
@@ -16,7 +16,6 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_
 
 
 def objective(trial):
-    print(f"Trial {trial.number} - Iniciando entrenamiento con hiperparámetros: {trial.params}")
     params = {
         'n_estimators': trial.suggest_int('n_estimators', 50, 250),
         'max_depth': trial.suggest_int('max_depth', 10, 50),
@@ -24,6 +23,7 @@ def objective(trial):
         'min_samples_leaf': trial.suggest_int('min_samples_leaf', 1, 4),
         'bootstrap': trial.suggest_categorical('bootstrap', [True, False])
     }
+    print(f"Trial {trial.number} - Iniciando entrenamiento con hiperparámetros: {params}")
     
     model = RandomForestRegressor(**params)
     rmse_scores = []
@@ -31,9 +31,10 @@ def objective(trial):
         X_fold_train, X_fold_val, y_fold_train, y_fold_val = train_test_split(X_train, y_train, test_size=0.2, random_state=SEED)
         model.fit(X_fold_train, y_fold_train)
         y_pred = model.predict(X_fold_val)
-        rmse = np.sqrt(metrics.mean_squared_error(y_fold_val, y_pred, squared=False)) # RMSE
+        rmse = metrics.root_mean_squared_error(y_fold_val, y_pred)
         rmse_scores.append(rmse)
-        print(f"Trial {trial.number} - Fold {_}: RMSE = {rmse}")
+    
+    print(f"Trial {trial.number} - RMSE: {np.mean(rmse_scores)}")
     return np.mean(rmse_scores)
 
 
