@@ -9,6 +9,10 @@ import time
 # definicion de constantes usadas a lo largo del proyecto
 SEED = 100472050 # la semilla debe ser el NIA de uno de los integrantes
 wind_ava = pd.read_csv("data/wind_ava.csv", index_col=0)
+aux = wind_ava[wind_ava.columns[wind_ava.columns.str.endswith('13')]]
+# añadir la columna energy a wind_ava
+aux.insert(0, "energy", wind_ava["energy"])     
+wind_ava = aux
 print(wind_ava.head())
 
 # Primero, dividiremos los datos en entrenamiento y test
@@ -25,7 +29,7 @@ param_grid = {
 }
 
 # hacer una busqueda aleatoria
-random_search = GridSearchCV(RandomForestRegressor(), param_distributions=param_grid, n_iter=100, cv=5, scoring='neg_root_mean_squared_error', n_jobs=-1, verbose=4)
+random_search = GridSearchCV(RandomForestRegressor(), param_grid=param_grid, cv=5, scoring='neg_root_mean_squared_error', n_jobs=-1, verbose=4)
 print("Iniciando búsqueda de hiperparámetros...")
 t1 = time.time()
 random_search.fit(X_train, y_train)
@@ -52,3 +56,8 @@ r2_rf_cv = best_model.score(X_test, y_test)
 
 print(f"RMSE: {rmse_rf_cv}")
 print(f"R2: {r2_rf_cv}")
+
+# exportar el modelo
+import pickle
+with open("grid_rf.pkl", "wb") as f:
+    pickle.dump(best_model, f)

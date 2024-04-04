@@ -9,19 +9,24 @@ import time
 # definicion de constantes usadas a lo largo del proyecto
 SEED = 100472050 # la semilla debe ser el NIA de uno de los integrantes
 wind_ava = pd.read_csv("data/wind_ava.csv", index_col=0)
+aux = wind_ava[wind_ava.columns[wind_ava.columns.str.endswith('13')]]
+# añadir la columna energy a wind_ava
+aux.insert(0, "energy", wind_ava["energy"])     
+wind_ava = aux
 print(wind_ava.head())
 
 # Primero, dividiremos los datos en entrenamiento y test
 X = wind_ava.drop(columns='energy')
 y = wind_ava['energy']
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=SEED)
-
+# como el anterior mejor es 'n_estimators': 150, 'min_samples_split': 10, 'min_samples_leaf': 2, 'max_depth': 30, 'bootstrap': True
+# vamos a ampliar el rango de valores para n_estimators y max_depth
 param_dist = {
-    'n_estimators': [50, 100, 150, 200, 250],
-    'max_depth': [10, 20, 30, 40, 50, None],
-    'min_samples_split': [2, 5, 10],
-    'min_samples_leaf': [1, 2, 4],
-    'bootstrap': [True, False]
+    'n_estimators': [200, 250],
+    'max_depth': [30, 40, 50, None],
+    'min_samples_split': [10, 15, 20],
+    'min_samples_leaf': [2, 4],
+    'bootstrap': [True]
 }
 
 # hacer una busqueda aleatoria
@@ -52,3 +57,8 @@ r2_rf_cv = best_model.score(X_test, y_test)
 
 print(f"RMSE: {rmse_rf_cv}")
 print(f"R2: {r2_rf_cv}")
+
+# exportar el modelo
+import pickle
+with open('models/random_search_rf.pkl', 'wb') as file:
+    pickle.dump(best_model, file)

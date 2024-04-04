@@ -8,7 +8,12 @@ import numpy as np
 # definicion de constantes usadas a lo largo del proyecto
 SEED = 100472050  # la semilla debe ser el NIA de uno de los integrantes
 wind_ava = pd.read_csv("data/wind_ava.csv", index_col=0)
+aux = wind_ava[wind_ava.columns[wind_ava.columns.str.endswith('13')]]
+# añadir la columna energy a wind_ava
+aux.insert(0, "energy", wind_ava["energy"])     
+wind_ava = aux
 print(wind_ava.head())
+
 # Dividimos los datos en entrenamiento y test
 X = wind_ava.drop(columns='energy')
 y = wind_ava['energy']
@@ -23,7 +28,7 @@ def objective(trial):
         'min_samples_leaf': trial.suggest_int('min_samples_leaf', 1, 4),
         'bootstrap': trial.suggest_categorical('bootstrap', [True, False])
     }
-    print(f"Trial {trial.number} - Iniciando entrenamiento con hiperparámetros: {params}")
+    # print(f"Trial {trial.number} - Iniciando entrenamiento con hiperparámetros: {params}")
     
     model = RandomForestRegressor(**params)
     rmse_scores = []
@@ -34,7 +39,7 @@ def objective(trial):
         rmse = metrics.root_mean_squared_error(y_fold_val, y_pred)
         rmse_scores.append(rmse)
     
-    print(f"Trial {trial.number} - RMSE: {np.mean(rmse_scores)}")
+    # print(f"Trial {trial.number} - RMSE: {np.mean(rmse_scores)}")
     return np.mean(rmse_scores)
 
 
@@ -72,6 +77,6 @@ print(f"R2: {r2_rf_cv}")
 
 # exportar el mejor modelo
 import pickle
-with open('best_model.pkl', 'wb') as f:
+with open('bayes_rf.pkl', 'wb') as f:
     pickle.dump(best_model, f)
 
