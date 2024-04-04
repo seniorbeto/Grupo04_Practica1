@@ -21,11 +21,13 @@ y = wind_ava['energy']
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=SEED)
 # como el anterior mejor es 'n_estimators': 150, 'min_samples_split': 10, 'min_samples_leaf': 2, 'max_depth': 30, 'bootstrap': True
 # vamos a ampliar el rango de valores para n_estimators y max_depth
+
+# iteracion 2: n_estimators': 250, 'min_samples_split': 10, 'min_samples_leaf': 2, 'max_depth': None, 'bootstrap': True
 param_dist = {
-    'n_estimators': [200, 250],
-    'max_depth': [30, 40, 50, None],
-    'min_samples_split': [10, 15, 20],
-    'min_samples_leaf': [2, 4],
+    'n_estimators': [250, 300, 350],
+    'max_depth': [None],
+    'min_samples_split': [8 ,10, 12],
+    'min_samples_leaf': [1, 2, 3],
     'bootstrap': [True]
 }
 
@@ -52,7 +54,7 @@ best_model = random_search.best_estimator_
 y_test_pred = best_model.predict(X_test)
 
 # Calcular métricas
-rmse_rf_cv = np.sqrt(metrics.mean_squared_error(y_test, y_test_pred))
+rmse_rf_cv = np.sqrt(metrics.root_mean_squared_error(y_test, y_test_pred))
 r2_rf_cv = best_model.score(X_test, y_test)
 
 print(f"RMSE: {rmse_rf_cv}")
@@ -60,5 +62,6 @@ print(f"R2: {r2_rf_cv}")
 
 # exportar el modelo
 import pickle
-with open('models/random_search_rf.pkl', 'wb') as file:
+filename = 'models/random_forest_model.pkl'
+with open(filename, 'wb') as file:
     pickle.dump(best_model, file)
