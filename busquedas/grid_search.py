@@ -21,11 +21,11 @@ y = wind_ava['energy']
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=SEED)
 
 param_grid = {
-    'n_estimators': [50, 100, 150, 200, 250],
-    'max_depth': [10, 20, 30, 40, 50, None],
+    'n_estimators': [250, 300, 320, 330, 340, 350, 400],
+    'max_depth': [20, 25, 30],
     'min_samples_split': [2, 5, 10],
-    'min_samples_leaf': [1, 2, 4],
-    'bootstrap': [True, False]
+    'min_samples_leaf': [1, 2, 4, 6],
+    'bootstrap': [True]
 }
 
 # hacer una busqueda aleatoria

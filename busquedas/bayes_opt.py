@@ -23,17 +23,17 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_
 def objective(trial):
     params = {
         'n_estimators': trial.suggest_int('n_estimators', 200, 350),
-        'max_depth': trial.suggest_int('max_depth', 20, 30),
-        'min_samples_split': trial.suggest_int('min_samples_split', 2, 5),
-        'min_samples_leaf': trial.suggest_int('min_samples_leaf', 1, 4),
+        'max_depth': trial.suggest_int('max_depth', 20, 40),
+        'min_samples_split': trial.suggest_int('min_samples_split', 2, 7),
+        'min_samples_leaf': trial.suggest_int('min_samples_leaf', 1, 5),
         'bootstrap':  trial.suggest_categorical('bootstrap', [True])
     }
     # print(f"Trial {trial.number} - Iniciando entrenamiento con hiperparámetros: {params}")
     
     model = RandomForestRegressor(**params)
     rmse_scores = []
-    for _ in range(10):  # 5-fold cross-validation
-        X_fold_train, X_fold_val, y_fold_train, y_fold_val = train_test_split(X_train, y_train, test_size=0.2, random_state=SEED)
+    for _ in range(10):  # 10-fold cross-validation
+        X_fold_train, X_fold_val, y_fold_train, y_fold_val = train_test_split(X_train, y_train, test_size=0.1, random_state=SEED)
         model.fit(X_fold_train, y_fold_train)
         y_pred = model.predict(X_fold_val)
         rmse = metrics.root_mean_squared_error(y_fold_val, y_pred)
@@ -50,7 +50,7 @@ def progress_callback(study, trial):
 study = optuna.create_study(direction='minimize', sampler=optuna.samplers.TPESampler(seed=SEED))
 
 print("Iniciando búsqueda de hiperparámetros...")
-study.optimize(objective, n_trials=100, n_jobs=-1, callbacks=[progress_callback], show_progress_bar=True)
+study.optimize(objective, n_trials=1000, n_jobs=-1, callbacks=[progress_callback], show_progress_bar=True)
 
 best_params = study.best_params
 print("Mejores hiperparámetros encontrados:")
@@ -69,16 +69,26 @@ best_model.fit(X_train, y_train)
 y_test_pred = best_model.predict(X_test)
 
 # Calcular métricas
-rmse_rf_cv = metrics.root_mean_squared_error(y_test, y_test_pred, squared=False)
+rmse_rf_cv = metrics.root_mean_squared_error(y_test, y_test_pred)
 r2_rf_cv = best_model.score(X_test, y_test)
 
 print(f"RMSE: {rmse_rf_cv}")
 print(f"R2: {r2_rf_cv}")
 
 # exportar el mejor modelo
-import pickle
-with open('bayes_rf.pkl', 'wb') as f:
-    pickle.dump(best_model, f)
-
+try:
+    import pickle
+    with open(f'bayes_rf_{rmse_rf_cv}.pkl', 'wb') as f:
+        pickle.dump(best_model, f)
+except:
+    try:
+        import joblib
+        joblib.dump(best_model, f'bayes_rf_{rmse_rf_cv}.pkl')
+    except:
+        pass
+    
+print(f"Parametros del mejor modelo: {best_params}")
+    
+    
 # parametros obtenidos por la busqueda
 # {'n_estimators': 239, 'max_depth': 25, 'min_samples_split': 2, 'min_samples_leaf': 1, 'bootstrap': True}
