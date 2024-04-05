@@ -4,6 +4,12 @@ from sklearn.svm import SVR
 from sklearn import metrics
 import optuna
 import numpy as np
+from sklearn.pipeline import Pipeline
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.preprocessing import StandardScaler
+from sklearn.compose import make_column_transformer
+
+
 
 # definicion de constantes usadas a lo largo del proyecto
 SEED = 100472050  # la semilla debe ser el NIA de uno de los integrantes
@@ -20,19 +26,26 @@ y = wind_ava['energy']
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=SEED)
 
 
+standard = make_column_transformer(
+    (StandardScaler(), X_train.columns)
+)
+
 def objective(trial):
     # parametros para un svr
     params = {
-        'C': trial.suggest_loguniform('C', 1e-2, 1e2),
-        'epsilon': trial.suggest_loguniform('epsilon', 1e-2, 1e2),
+        'C': trial.suggest_float('C', 1e-2, 1e2, log=True),
+        'epsilon': trial.suggest_float('epsilon', 1e-2, 1e2, log=True),
         'kernel': trial.suggest_categorical('kernel', ['linear', 'poly', 'rbf', 'sigmoid']),
         'degree': trial.suggest_int('degree', 1, 5),
         'gamma': trial.suggest_categorical('gamma', ['scale', 'auto']),
-        'coef0': trial.suggest_loguniform('coef0', 1e-2, 1e2)
+        'coef0': trial.suggest_float('coef0', 1e-2, 1e2, log=True)
     }
     # print(f"Trial {trial.number} - Iniciando entrenamiento con hiperparámetros: {params}")
-    
-    model = SVR(**params)
+    svr_pipe = Pipeline([
+        ('standard', standard),
+        ('svr', SVR(**params))
+    ])
+    model = svr_pipe
     rmse_scores = []
     for _ in range(10):  # 10-fold cross-validation
         X_fold_train, X_fold_val, y_fold_train, y_fold_val = train_test_split(X_train, y_train, test_size=0.1, random_state=SEED)
