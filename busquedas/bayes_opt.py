@@ -4,6 +4,10 @@ from sklearn.ensemble import RandomForestRegressor
 from sklearn import metrics
 import optuna
 import numpy as np
+from sklearn.compose import make_column_transformer
+from sklearn.preprocessing import StandardScaler
+from sklearn.pipeline import Pipeline
+
 
 # definicion de constantes usadas a lo largo del proyecto
 SEED = 100472050  # la semilla debe ser el NIA de uno de los integrantes
@@ -19,6 +23,11 @@ X = wind_ava.drop(columns='energy')
 y = wind_ava['energy']
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=SEED)
 
+standard = make_column_transformer(
+    (StandardScaler(), X_train.columns)
+)
+
+
 
 def objective(trial):
     params = {
@@ -30,7 +39,11 @@ def objective(trial):
     }
     # print(f"Trial {trial.number} - Iniciando entrenamiento con hiperparámetros: {params}")
     
-    model = RandomForestRegressor(**params)
+    model = Pipeline([
+        ('standard', standard),
+        ('rf', RandomForestRegressor(**params))
+    ])
+    
     rmse_scores = []
     for _ in range(10):  # 10-fold cross-validation
         X_fold_train, X_fold_val, y_fold_train, y_fold_val = train_test_split(X_train, y_train, test_size=0.1, random_state=SEED)
